@@ -18,10 +18,19 @@ scripts=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cd "${scripts}"
 
 IMAGE_SHA_MATCHED="FALSE"
-AWS_FOR_FLUENT_BIT_VERSION=$(cat ../AWS_FOR_FLUENT_BIT_VERSION)
+# TODO: Make it work for both build versions (or move entire logic in this script)
+if [ -z "$BUILD_VERSION" ]; then
+    AWS_FOR_FLUENT_BIT_VERSION=$(cat ../AWS_FOR_FLUENT_BIT_VERSION)
+else
+    AWS_FOR_FLUENT_BIT_VERSION=$(../scripts/get_linux_version.sh "$BUILD_VERSION" "version")
+fi
 AWS_FOR_FLUENT_BIT_STABLE_VERSION=$(cat ../AWS_FOR_FLUENT_BIT_STABLE_VERSION)
 
-PUBLISH_LATEST=$(cat ../linux.version | jq -r '.linux.latest')
+if [ -z "$BUILD_VERSION" ]; then
+    PUBLISH_LATEST="true"  # Default behavior when BUILD_VERSION is not defined
+else
+    PUBLISH_LATEST=$(../scripts/get_linux_version.sh "$BUILD_VERSION" "latest")
+fi
 echo "Publish Latest? ${PUBLISH_LATEST}"
 
 # Problem: when we push a new version bump the version number in AWS_FOR_FLUENT_BIT_VERSION file changes
@@ -603,8 +612,6 @@ verify_ecr() {
 check_image_version() {
 	export DOCKER_CLI_EXPERIMENTAL=enabled
 	EXIT_CODE=0
-
-	docker_hub_login
 	
 	# check if we can get the image information in dockerhub; if yes, the exit status should be 0
 	docker manifest inspect public.ecr.aws/aws-observability/aws-for-fluent-bit:${1} > /dev/null || EXIT_CODE=$?

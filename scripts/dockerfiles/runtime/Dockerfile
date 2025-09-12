@@ -38,8 +38,9 @@ COPY --from=plugins /kinesis-streams/THIRD-PARTY \
     /kinesis-streams/LICENSE \
     /fluent-bit/licenses/kinesis/
 
-# Copy version information
-COPY AWS_FOR_FLUENT_BIT_VERSION /AWS_FOR_FLUENT_BIT_VERSION
+# Create version information from build argument
+ARG AWS_FOR_FLUENT_BIT_VERSION
+RUN echo ${AWS_FOR_FLUENT_BIT_VERSION} > /AWS_FOR_FLUENT_BIT_VERSION
 
 # Copy ECS configuration directory
 ADD ecs /ecs/
@@ -49,7 +50,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ARG FLB_VERSION
-ARG AWS_FOR_FLUENT_BIT_VERSION
 ARG OS_PRETTY_NAME
 
 LABEL author="FireLens Team <aws-firelens@amazon.com>" \
